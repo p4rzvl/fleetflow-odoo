@@ -34,5 +34,7 @@ FleetFlow is a comprehensive fleet management application designed to handle dri
 3. Set environment variables to point to the correct backend API URLs.
 4. Run the development server: `npm run dev`.
 
-## License
-[Add License Here]
+
+> This project was created during the virtual round of odooxgvp2026. I would like to extend my heartfelt thanks to my teammates [Prem Raichura](https://github.com/prem-raichura), [Charmi Padh](https://github.com/CharmiPadh03), and [Hemant Pande](https://github.com/HEMANT-PANDE), whose hard work and dedication made this possible. Your commitment, teamwork, and constant support played a crucial role in completion of this project. I am truly grateful to have such individuals by my side.
+
+
