@@ -1,11 +1,14 @@
 import { useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { Truck, Eye, EyeOff, Lock, CheckCircle2 } from 'lucide-react'
+import { authService } from '../services/api'
 
 function ResetPassword() {
     const navigate = useNavigate()
     const location = useLocation()
-    const email = location.state?.email || ''
+    // Fall back to sessionStorage so the form works after a page reload
+    const email = location.state?.email || sessionStorage.getItem('reset_email') || ''
+    const otp = location.state?.otp || sessionStorage.getItem('reset_otp') || ''
 
     const [formData, setFormData] = useState({
         password: '',
@@ -49,7 +52,7 @@ function ResetPassword() {
         setError('')
     }
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault()
         setError('')
 
@@ -64,17 +67,19 @@ function ResetPassword() {
         }
 
         setIsSubmitting(true)
-
-        // Simulate API call
-        setTimeout(() => {
-            setIsSubmitting(false)
+        try {
+            await authService.resetPassword(email, otp, formData.password)
+            // Clear the persisted OTP session data
+            sessionStorage.removeItem('reset_email')
+            sessionStorage.removeItem('reset_otp')
             setSuccess(true)
-
-            // Redirect to login after 3 seconds
-            setTimeout(() => {
-                navigate('/login')
-            }, 3000)
-        }, 1500)
+            setTimeout(() => navigate('/login'), 3000)
+        } catch (err) {
+            const detail = err?.response?.data?.detail
+            setError(typeof detail === 'string' ? detail : 'Failed to reset password. OTP may be invalid or expired.')
+        } finally {
+            setIsSubmitting(false)
+        }
     }
 
     // If no email passed (user navigated directly), redirect

@@ -1,0 +1,6 @@
+Initializing TestClient for the Modular Monolith...
+Health Check: 200 - {'status': 'ok', 'service': 'fleetflow-monolith'}
+Dashboard Stats: 200 - {'active_fleet': 0, 'maintenance_alerts': 0, 'utilization_rate_percent': 0.0, 'pending_cargo': 0}
+Vehicle Registry (Empty DB): 200 - []
+
+SUCCESS! All monolith endpoints are available and correctly mapping models.

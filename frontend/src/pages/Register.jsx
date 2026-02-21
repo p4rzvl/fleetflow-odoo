@@ -1,34 +1,51 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Truck } from 'lucide-react'
+import { authService } from '../services/api'
+
+// Backend enums for UserRole
+const ROLES = [
+  { value: 'Manager', label: 'Fleet Manager' },
+  { value: 'Dispatcher', label: 'Dispatcher' },
+  { value: 'Safety Officer', label: 'Safety Officer' },
+  { value: 'Financial Analyst', label: 'Financial Analyst' }
+]
 
 function Register() {
   const navigate = useNavigate()
   const [formData, setFormData] = useState({
-    fullName: '',
     email: '',
-    phone: '',
-    username: '',
     password: '',
     confirmPassword: '',
-    role: 'driver',
-    licenseNumber: ''
+    role: 'Manager'
   })
+  const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
   const handleChange = (e) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
+    setError('')
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
+    setError('')
     if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match!')
+      setError('Passwords do not match.')
       return
     }
-    // For demo, just navigate to login
-    alert('Registration successful! Please login.')
-    navigate('/login')
+    setSubmitting(true)
+    try {
+      await authService.register(formData.email, formData.password, formData.role)
+      alert('Registration successful! Please log in.')
+      navigate('/login')
+    } catch (err) {
+      const detail = err?.response?.data?.detail
+      setError(typeof detail === 'string' ? detail : 'Registration failed. Try again.')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -37,99 +54,41 @@ function Register() {
         <div className="auth-logo">
           <Truck size={48} />
         </div>
-        
+
         <h2 className="auth-title">Create Account</h2>
         <p className="auth-subtitle">Join FleetFlow today</p>
 
+        {error && (
+          <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '0.5rem', padding: '0.75rem', marginBottom: '1rem', color: '#dc2626', fontSize: '0.875rem' }}>
+            {error}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit}>
-          <div className="form-row">
-            <div className="form-group">
-              <label className="form-label">Full Name</label>
-              <input
-                type="text"
-                name="fullName"
-                className="form-input"
-                placeholder="Enter full name"
-                value={formData.fullName}
-                onChange={handleChange}
-                required
-              />
-            </div>
+          <div className="form-group">
+            <label className="form-label">Email *</label>
+            <input
+              type="email"
+              name="email"
+              className="form-input"
+              placeholder="Enter your email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+              autoFocus
+            />
+          </div>
 
-            <div className="form-group">
-              <label className="form-label">Email</label>
-              <input
-                type="email"
-                name="email"
-                className="form-input"
-                placeholder="Enter email"
-                value={formData.email}
-                onChange={handleChange}
-                required
-              />
-            </div>
+          <div className="form-group">
+            <label className="form-label">Role *</label>
+            <select name="role" className="form-select" value={formData.role} onChange={handleChange}>
+              {ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+            </select>
           </div>
 
           <div className="form-row">
             <div className="form-group">
-              <label className="form-label">Phone</label>
-              <input
-                type="tel"
-                name="phone"
-                className="form-input"
-                placeholder="Enter phone number"
-                value={formData.phone}
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">Role</label>
-              <select
-                name="role"
-                className="form-select"
-                value={formData.role}
-                onChange={handleChange}
-              >
-                <option value="driver">Driver</option>
-                <option value="dispatcher">Dispatcher</option>
-                <option value="admin">Admin</option>
-                <option value="manager">Fleet Manager</option>
-              </select>
-            </div>
-          </div>
-
-          {formData.role === 'driver' && (
-            <div className="form-group">
-              <label className="form-label">License Number</label>
-              <input
-                type="text"
-                name="licenseNumber"
-                className="form-input"
-                placeholder="Enter license number"
-                value={formData.licenseNumber}
-                onChange={handleChange}
-              />
-            </div>
-          )}
-
-          <div className="form-row">
-            <div className="form-group">
-              <label className="form-label">Username</label>
-              <input
-                type="text"
-                name="username"
-                className="form-input"
-                placeholder="Choose username"
-                value={formData.username}
-                onChange={handleChange}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">Password</label>
+              <label className="form-label">Password *</label>
               <input
                 type="password"
                 name="password"
@@ -140,23 +99,23 @@ function Register() {
                 required
               />
             </div>
+
+            <div className="form-group">
+              <label className="form-label">Confirm Password *</label>
+              <input
+                type="password"
+                name="confirmPassword"
+                className="form-input"
+                placeholder="Confirm password"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                required
+              />
+            </div>
           </div>
 
-          <div className="form-group">
-            <label className="form-label">Confirm Password</label>
-            <input
-              type="password"
-              name="confirmPassword"
-              className="form-input"
-              placeholder="Confirm password"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          <button type="submit" className="btn btn-primary auth-btn">
-            Register
+          <button type="submit" className="btn btn-primary auth-btn" disabled={submitting}>
+            {submitting ? 'Registering…' : 'Register'}
           </button>
         </form>
 

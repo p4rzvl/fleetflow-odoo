@@ -43,8 +43,8 @@ function Dashboard() {
                             <Truck size={24} />
                         </div>
                         <div>
-                            <p style={{ color: 'var(--gray-500)', fontSize: '0.875rem', fontWeight: 500 }}>Total Vehicles</p>
-                            <h3 style={{ fontSize: '1.5rem', fontWeight: 600, marginTop: '0.25rem' }}>{stats?.total_vehicles || 0}</h3>
+                            <p style={{ color: 'var(--gray-500)', fontSize: '0.875rem', fontWeight: 500 }}>Active Fleet</p>
+                            <h3 style={{ fontSize: '1.5rem', fontWeight: 600, marginTop: '0.25rem' }}>{stats?.active_fleet || 0}</h3>
                         </div>
                     </div>
                 </div>
@@ -55,8 +55,8 @@ function Dashboard() {
                             <Activity size={24} />
                         </div>
                         <div>
-                            <p style={{ color: 'var(--gray-500)', fontSize: '0.875rem', fontWeight: 500 }}>Active Trips</p>
-                            <h3 style={{ fontSize: '1.5rem', fontWeight: 600, marginTop: '0.25rem' }}>{stats?.active_trips || 0}</h3>
+                            <p style={{ color: 'var(--gray-500)', fontSize: '0.875rem', fontWeight: 500 }}>Pending Cargo</p>
+                            <h3 style={{ fontSize: '1.5rem', fontWeight: 600, marginTop: '0.25rem' }}>{stats?.pending_cargo || 0}</h3>
                         </div>
                     </div>
                 </div>
@@ -67,8 +67,8 @@ function Dashboard() {
                             <Wrench size={24} />
                         </div>
                         <div>
-                            <p style={{ color: 'var(--gray-500)', fontSize: '0.875rem', fontWeight: 500 }}>Vehicles in Maintenance</p>
-                            <h3 style={{ fontSize: '1.5rem', fontWeight: 600, marginTop: '0.25rem' }}>{stats?.vehicles_in_maintenance || 0}</h3>
+                            <p style={{ color: 'var(--gray-500)', fontSize: '0.875rem', fontWeight: 500 }}>Maintenance Alerts</p>
+                            <h3 style={{ fontSize: '1.5rem', fontWeight: 600, marginTop: '0.25rem' }}>{stats?.maintenance_alerts || 0}</h3>
                         </div>
                     </div>
                 </div>
@@ -79,8 +79,8 @@ function Dashboard() {
                             <Users size={24} />
                         </div>
                         <div>
-                            <p style={{ color: 'var(--gray-500)', fontSize: '0.875rem', fontWeight: 500 }}>Available Drivers</p>
-                            <h3 style={{ fontSize: '1.5rem', fontWeight: 600, marginTop: '0.25rem' }}>{stats?.available_drivers || 0}</h3>
+                            <p style={{ color: 'var(--gray-500)', fontSize: '0.875rem', fontWeight: 500 }}>Utilization Rate</p>
+                            <h3 style={{ fontSize: '1.5rem', fontWeight: 600, marginTop: '0.25rem' }}>{stats?.utilization_rate_percent || 0}%</h3>
                         </div>
                     </div>
                 </div>

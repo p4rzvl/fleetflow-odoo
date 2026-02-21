@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
     LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area,
     XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts'
 import { TrendingUp, TrendingDown, Fuel, DollarSign, Truck, MapPin, Download } from 'lucide-react'
+import { analyticsApi } from '../services/api'
 
 // ─── Mock Data ──────────────────────────────────────────
 const fuelEfficiencyData = [
@@ -131,12 +132,36 @@ function ChartCard({ title, children, span }) {
 // ─── Main Page ─────────────────────────────────────────
 function Analytics() {
     const [period] = useState('6 Months')
+    const [roi, setRoi] = useState(null)
+    const [fuelEff, setFuelEff] = useState(null)
+
+    useEffect(() => {
+        analyticsApi.getRoi().then(d => setRoi(d.roi_percentage)).catch(() => { })
+        analyticsApi.getFuelEfficiency().then(d => setFuelEff(d.fuel_efficiency_km_per_l)).catch(() => { })
+    }, [])
+
+    const handleExport = async () => {
+        try {
+            const response = await analyticsApi.exportReport()
+            const url = window.URL.createObjectURL(new Blob([response.data]))
+            const link = document.createElement('a')
+            link.href = url
+            link.setAttribute('download', 'monthly_fleet_report.csv')
+            document.body.appendChild(link)
+            link.click()
+            link.remove()
+            window.URL.revokeObjectURL(url)
+        } catch (err) {
+            console.error('Export failed:', err)
+            alert('Export failed. Please try again.')
+        }
+    }
 
     return (
         <div>
             <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h2 className="page-title">Operational Analytics & Financial Reports</h2>
-                <button className="btn btn-primary">
+                <h2 className="page-title">Operational Analytics &amp; Financial Reports</h2>
+                <button className="btn btn-primary" onClick={handleExport}>
                     <Download size={16} />
                     Export Report
                 </button>
@@ -155,17 +180,13 @@ function Analytics() {
                 <KpiCard
                     icon={DollarSign}
                     label="Fleet ROI"
-                    value="+12.5%"
-                    change="+3.1% vs last quarter"
-                    changeType="up"
+                    value={roi !== null ? `${roi > 0 ? '+' : ''}${roi}%` : 'Loading...'}
                     color="#10b981"
                 />
                 <KpiCard
                     icon={Truck}
-                    label="Utilization Rate"
-                    value="92%"
-                    change="+5% vs last month"
-                    changeType="up"
+                    label="Fuel Efficiency"
+                    value={fuelEff !== null ? `${fuelEff} km/L` : 'Loading...'}
                     color="#3b82f6"
                 />
                 <KpiCard

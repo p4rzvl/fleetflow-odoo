@@ -38,6 +38,9 @@ def login(data: LoginSchema, db: Session = Depends(get_db)):
     if not user or not verify_password(data.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
+    if not user.is_active:
+        raise HTTPException(status_code=403, detail="Account is deactivated")
+
     token = create_access_token({
         "sub": user.email,
         "role": user.role.value
@@ -56,7 +59,8 @@ async def forgot_password(data: EmailSchema, db: Session = Depends(get_db)):
 
     otp = str(random.randint(100000, 999999))
     user.otp = otp
-    user.otp_expiry = datetime.utcnow() + timedelta(minutes=5)
+    # Use timezone-aware UTC so comparison in reset-password (which uses timezone.utc) works
+    user.otp_expiry = datetime.now(timezone.utc) + timedelta(minutes=5)
 
     db.commit()
 

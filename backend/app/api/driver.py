@@ -29,26 +29,16 @@ def create_driver(driver: DriverCreate, db: Session = Depends(get_db)):
 
 @router.get("/", response_model=List[DriverResponse])
 def read_drivers(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    # Pure read — no DB mutations. Use POST /drivers/sync-expired-licenses to batch-suspend.
     drivers = db.query(Driver).offset(skip).limit(limit).all()
-    # Auto-suspend drivers with expired licenses on read
-    for driver in drivers:
-        if driver.license_expiry_date < date.today() and driver.status != DriverStatus.SUSPENDED:
-            driver.status = DriverStatus.SUSPENDED
-            db.commit()
-            db.refresh(driver)
     return drivers
 
 @router.get("/{driver_id}", response_model=DriverResponse)
 def read_driver(driver_id: int, db: Session = Depends(get_db)):
+    # Pure read — suspension flag shown as-is, not mutated here.
     driver = db.query(Driver).filter(Driver.id == driver_id).first()
     if driver is None:
         raise HTTPException(status_code=404, detail="Driver not found")
-        
-    if driver.license_expiry_date < date.today() and driver.status != DriverStatus.SUSPENDED:
-        driver.status = DriverStatus.SUSPENDED
-        db.commit()
-        db.refresh(driver)
-        
     return driver
 
 @router.patch("/{driver_id}/status", response_model=DriverResponse)
@@ -64,3 +54,23 @@ def update_driver_status(driver_id: int, new_status: DriverStatus, db: Session =
     db.commit()
     db.refresh(driver)
     return driver
+
+@router.post("/sync-expired-licenses", response_model=dict)
+def sync_expired_licenses(db: Session = Depends(get_db)):
+    """
+    Batch-suspend all drivers with expired licenses that are not already suspended.
+    Call this endpoint periodically (e.g. via a scheduler or admin action)
+    instead of mutating state inside GET handlers.
+    """
+    today = date.today()
+    expired_drivers = db.query(Driver).filter(
+        Driver.license_expiry_date < today,
+        Driver.status != DriverStatus.SUSPENDED
+    ).all()
+    
+    count = len(expired_drivers)
+    for driver in expired_drivers:
+        driver.status = DriverStatus.SUSPENDED
+    
+    db.commit()
+    return {"suspended_count": count, "message": f"Suspended {count} driver(s) with expired licenses"}

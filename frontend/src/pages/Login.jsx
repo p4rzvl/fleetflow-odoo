@@ -1,25 +1,35 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Truck } from 'lucide-react'
+import { authService } from '../services/api'
 
 function Login() {
   const navigate = useNavigate()
-  const [formData, setFormData] = useState({
-    username: '',
-    password: '',
-    role: 'driver'
-  })
+  const [formData, setFormData] = useState({ email: '', password: '' })
+  const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
   const handleChange = (e) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
+    setError('')
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    // For demo, just navigate to dashboard
-    localStorage.setItem('user', JSON.stringify(formData))
-    navigate('/dashboard')
+    setSubmitting(true)
+    setError('')
+    try {
+      const data = await authService.login(formData.email, formData.password)
+      localStorage.setItem('access_token', data.access_token)
+      localStorage.setItem('user_email', formData.email)
+      navigate('/dashboard')
+    } catch (err) {
+      const detail = err?.response?.data?.detail
+      setError(typeof detail === 'string' ? detail : 'Invalid email or password.')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -32,32 +42,24 @@ function Login() {
         <h2 className="auth-title">Welcome Back</h2>
         <p className="auth-subtitle">Sign in to FleetFlow</p>
 
+        {error && (
+          <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '0.5rem', padding: '0.75rem', marginBottom: '1rem', color: '#dc2626', fontSize: '0.875rem' }}>
+            {error}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label className="form-label">Role</label>
-            <select
-              name="role"
-              className="form-select"
-              value={formData.role}
-              onChange={handleChange}
-            >
-              <option value="driver">Driver</option>
-              <option value="dispatcher">Dispatcher</option>
-              <option value="admin">Admin</option>
-              <option value="manager">Fleet Manager</option>
-            </select>
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Username</label>
+            <label className="form-label">Email</label>
             <input
-              type="text"
-              name="username"
+              type="email"
+              name="email"
               className="form-input"
-              placeholder="Enter username"
-              value={formData.username}
+              placeholder="Enter your email"
+              value={formData.email}
               onChange={handleChange}
               required
+              autoFocus
             />
           </div>
 
@@ -78,8 +80,8 @@ function Login() {
             <Link to="/forgot-password">Forgot Password?</Link>
           </div>
 
-          <button type="submit" className="btn btn-primary auth-btn">
-            Login
+          <button type="submit" className="btn btn-primary auth-btn" disabled={submitting}>
+            {submitting ? 'Signing in…' : 'Login'}
           </button>
         </form>
 

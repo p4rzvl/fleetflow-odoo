@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Truck, ArrowLeft, Mail, ShieldCheck } from 'lucide-react'
+import { authService } from '../services/api'
 
 function ForgotPassword() {
     const navigate = useNavigate()
@@ -22,17 +23,20 @@ function ForgotPassword() {
         }
     }, [resendTimer])
 
-    const handleEmailSubmit = (e) => {
+    const handleEmailSubmit = async (e) => {
         e.preventDefault()
         setError('')
         setIsSubmitting(true)
-
-        // Simulate API call to send OTP
-        setTimeout(() => {
-            setIsSubmitting(false)
+        try {
+            await authService.forgotPassword(email)
             setStep(2)
             setResendTimer(60)
-        }, 1200)
+        } catch (err) {
+            const detail = err?.response?.data?.detail
+            setError(typeof detail === 'string' ? detail : 'Failed to send OTP. Check your email.')
+        } finally {
+            setIsSubmitting(false)
+        }
     }
 
     const handleOtpChange = (index, value) => {
@@ -67,12 +71,13 @@ function ForgotPassword() {
         }
     }
 
-    const handleResendOtp = () => {
+    const handleResendOtp = async () => {
         if (resendTimer > 0) return
         setResendTimer(60)
         setOtp(['', '', '', '', '', ''])
         setError('')
         otpRefs.current[0]?.focus()
+        try { await authService.forgotPassword(email) } catch (_) { }
     }
 
     const handleVerifyOtp = (e) => {
@@ -82,16 +87,11 @@ function ForgotPassword() {
             setError('Please enter the complete 6-digit OTP')
             return
         }
-
-        setIsSubmitting(true)
-        setError('')
-
-        // Simulate OTP verification
-        setTimeout(() => {
-            setIsSubmitting(false)
-            // Navigate to reset password with email as state
-            navigate('/reset-password', { state: { email, otp: otpValue } })
-        }, 1000)
+        // Persist to sessionStorage so ResetPassword works even after page reload
+        sessionStorage.setItem('reset_email', email)
+        sessionStorage.setItem('reset_otp', otpValue)
+        // Navigate to reset password page with email and OTP in state
+        navigate('/reset-password', { state: { email, otp: otpValue } })
     }
 
     const maskedEmail = email

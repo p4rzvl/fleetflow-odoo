@@ -1,47 +1,56 @@
-
-# Byte-compiled / optimized / DLL files
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
-assets
-# IDEs and Editors
-.vscode/
-.idea/
-*.swp
-*.swo
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
 
-# Environments
-.env
-.venv
-env/
+# Virtual environments
 venv/
-**/venv/
+.venv/
+env/
+.env
 ENV/
 env.bak/
 venv.bak/
 
-# Database
-*.sqlite3
-*.db
-fleetflow.db
-
-# Logs
-*.log
-
-# pytest
-.pytest_cache/
-htmlcov/
-.coverage
-.tox/
-
-# OS generated files
-.DS_Store
-Thumbs.db
-
-# Frontend / Node environments
+# Node.js
 node_modules/
+npm-debug.log
+yarn-error.log
+yarn-debug.log*
+.pnpm-debug.log
+
+# React / Next.js
 .next/
 out/
 build/
 dist/
-.env*.local
+.DS_Store
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db

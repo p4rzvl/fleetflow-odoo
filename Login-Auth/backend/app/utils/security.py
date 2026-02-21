@@ -1,12 +1,15 @@
 import os
 from jose import jwt
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pwdlib import PasswordHash
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Argon2 hasher
 password_hash = PasswordHash.recommended()
 
-SECRET_KEY = os.getenv("SECRET_KEY")
+SECRET_KEY = os.getenv("SECRET_KEY", "fleetflow-auth-secret-key-changeme")
 ALGORITHM = "HS256"
 
 
@@ -23,6 +26,7 @@ def verify_password(plain: str, hashed: str) -> bool:
 # CREATE JWT
 def create_access_token(data: dict):
     to_encode = data.copy()
-    expire = datetime.utcnow() + timedelta(hours=1)
+    expire_minutes = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 60))
+    expire = datetime.now(timezone.utc) + timedelta(minutes=expire_minutes)
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)

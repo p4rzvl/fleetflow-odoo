@@ -10,7 +10,7 @@ from app.schemas.dashboard import DashboardStats
 
 router = APIRouter()
 
-@router.get("/dashboard/stats", response_model=DashboardStats)
+@router.get("/stats", response_model=DashboardStats)
 def get_dashboard_stats(
     vehicle_type: Optional[VehicleType] = Query(None, description="Filter by vehicle type"),
     db: Session = Depends(get_db)

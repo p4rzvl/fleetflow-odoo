@@ -21,7 +21,12 @@ def create_trip(trip: TripCreate, db: Session = Depends(get_db)):
     if vehicle.status != VehicleStatus.AVAILABLE:
         raise HTTPException(status_code=400, detail=f"Vehicle is not available. Status: {vehicle.status.value}")
         
-    # Validation Rule: Cargo Weight
+    # Validation Rule: Cargo Weight must be positive
+    if trip.cargo_weight <= 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Cargo weight must be a positive number"
+        )
     if trip.cargo_weight > vehicle.max_capacity:
         raise HTTPException(
             status_code=400, 
@@ -44,6 +49,11 @@ def create_trip(trip: TripCreate, db: Session = Depends(get_db)):
     
     return new_trip
 
+@router.get("/trips/", response_model=List[TripResponse])
+def get_all_trips(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    trips = db.query(Trip).offset(skip).limit(limit).all()
+    return trips
+
 @router.post("/trips/{trip_id}/dispatch", response_model=TripResponse)
 def dispatch_trip(trip_id: int, db: Session = Depends(get_db)):
     trip = db.query(Trip).filter(Trip.id == trip_id).first()
@@ -61,10 +71,15 @@ def dispatch_trip(trip_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Vehicle is no longer available")
     vehicle.status = VehicleStatus.ON_TRIP
     
-    # Ideally update driver status as well to ON_TRIP
+    # Re-validate driver status before dispatching (may have been suspended since trip creation)
     if trip.driver_id:
         driver = db.query(Driver).filter(Driver.id == trip.driver_id).first()
         if driver:
+            if driver.status != DriverStatus.ON_DUTY:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Driver is no longer on duty. Status: {driver.status.value}. Cannot dispatch."
+                )
             driver.status = DriverStatus.ON_TRIP
 
     db.commit()
@@ -83,6 +98,9 @@ def complete_trip(trip_id: int, completion_data: TripComplete, db: Session = Dep
         
     if trip.status != TripStatus.DISPATCHED:
         raise HTTPException(status_code=400, detail="Only DISPATCHED trips can be completed")
+
+    if completion_data.final_odometer <= 0:
+        raise HTTPException(status_code=400, detail="Final odometer reading must be a positive number")
         
     trip.status = TripStatus.COMPLETED
     trip.final_odometer = completion_data.final_odometer
